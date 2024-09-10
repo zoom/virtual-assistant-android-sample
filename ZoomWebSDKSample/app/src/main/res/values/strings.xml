@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">LiveSDKDemo</string>
+    <string name="app_title">ZCX Web SDK Sample</string>
+    <string name="title_scenario1">Scenario1-WebView hold Web Site</string>
+    <string name="title_scenario2">Scenario2-Native Button Trigger Web View to hold chat window</string>
+    <string name="title_case1">Case1-Close WebView Through X Icon in Chat Window</string>
+    <string name="title_case2">Case2-Bring App parameters into Chat Window</string>
+    <string name="title_case3">Case3-Open URL in inner WebView(in App)</string>
+    <string name="title_case4">Case4-Open URL in separated Tab(in Browser)</string>
+    <string name="title_case4_new">Case4(New)-Open URL in separated Tab(in Browser)</string>
+    <string name="title_case5">Case5-Open URL in CustomTabs (in app)</string>
+    <string name="title_case6">Case6-Bring parameters back to App while Handoff to human agent with closing Chat window</string>
+</resources>
