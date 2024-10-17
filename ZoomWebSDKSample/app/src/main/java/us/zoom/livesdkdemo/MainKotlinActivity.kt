@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.Message
 import android.util.Log
 import android.webkit.ConsoleMessage
 import android.webkit.JavascriptInterface
@@ -12,6 +13,7 @@ import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
+import android.webkit.WebView.WebViewTransport
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -38,6 +40,7 @@ class MainKotlinActivity : AppCompatActivity() {
 
     // Flag to determine if URL should be opened in system browser
     private var mOpenURLInSystemBrowser = false
+    // Flag to determine if URL should processed by JS handler
     private var mUseJSURLHandler = false
 
     companion object {
@@ -102,6 +105,7 @@ class MainKotlinActivity : AppCompatActivity() {
         binding.webView.apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
+            settings.setSupportMultipleWindows(true)
 
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
@@ -116,13 +120,11 @@ class MainKotlinActivity : AppCompatActivity() {
                     view: WebView?,
                     request: WebResourceRequest?
                 ): Boolean {
-                    if (mUseJSURLHandler) {
-                        return super.shouldOverrideUrlLoading(view, request)
+                    // Here you handle the behavior for `target="_self"`
+                    return if (handelCustomScheme(request?.url.toString())) {
+                        true
                     } else {
-                        request?.url?.also {
-                            processUrl(it.toString())
-                        }
-                        return true
+                        super.shouldOverrideUrlLoading(view, request)
                     }
                 }
             }
@@ -140,6 +142,31 @@ class MainKotlinActivity : AppCompatActivity() {
                     return this@MainKotlinActivity.onShowFileChooser(
                         webView, filePathCallback, fileChooserParams
                     )
+                }
+
+                override fun onCreateWindow(
+                    view: WebView?,
+                    isDialog: Boolean,
+                    isUserGesture: Boolean,
+                    resultMsg: Message
+                ): Boolean {
+                    val newWebView = WebView(this@MainKotlinActivity)
+                    val transport = resultMsg.obj as WebViewTransport
+                    transport.webView = newWebView
+                    resultMsg.sendToTarget()
+
+                    newWebView.webViewClient = object : WebViewClient() {
+                        override fun shouldOverrideUrlLoading(
+                            view: WebView,
+                            request: WebResourceRequest
+                        ): Boolean {
+                            // Here you handle the behavior for `target="_blank"`
+                            processUrl(request.url.toString())
+                            return true
+                        }
+                    }
+
+                    return true
                 }
             }
 
@@ -163,6 +190,11 @@ class MainKotlinActivity : AppCompatActivity() {
      * Currently, we support one command with a JSON format like {"cmd":"openURL", "value":"https://zoom.us"}.
      * When this command type message is received, developers should start an activity with a browser to
      * load the URL within the value, such as "https://zoom.us".
+     *
+     * Please note the the command "openURL" of data format {"cmd":"openURL", "value":"https://zoom.us"} has been deprecated.
+     * It is recommended to use an <a> element with a target attribute,
+     * such as <a href="https://www.example.com" target="_blank">Open in New Tab</a>,
+     * to open the URL in a new tab.
      */
     private fun injectJavaScriptFunction() {
         val commonHandlerScript = if (mUseJSURLHandler) {
@@ -233,8 +265,22 @@ class MainKotlinActivity : AppCompatActivity() {
         }
     }
 
+    // Custom scheme should be handled here
+    private fun handelCustomScheme(url: String?): Boolean {
+        url?.also {
+            if (it.startsWith("tel:")) {
+                startActivity(Intent(Intent.ACTION_DIAL, Uri.parse(it)))
+                return true
+            }
+        }
+        return false
+    }
+
     private fun processUrl(url: String?) {
         url?.also {
+            if (handelCustomScheme(it)) {
+                return
+            }
             //Customize your actions here to handle the URL as needed.
             if (mOpenURLInSystemBrowser) {
                 // Case 1: open url in system browser

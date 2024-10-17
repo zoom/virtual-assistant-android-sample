@@ -51,13 +51,6 @@
             android:text="@string/title_case4" />
 
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnCase4New"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAllCaps="false"
-            android:text="@string/title_case4_new" />
-
-        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnCase5"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

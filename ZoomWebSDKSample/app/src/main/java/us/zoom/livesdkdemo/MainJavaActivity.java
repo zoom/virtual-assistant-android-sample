@@ -3,6 +3,7 @@ package us.zoom.livesdkdemo;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.Log;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
@@ -33,6 +34,7 @@ public class MainJavaActivity extends AppCompatActivity {
 
     // Flag to determine if URL should be opened in system browser
     private boolean mOpenURLInSystemBrowser = false;
+    // Flag to determine if URL should processed by JS handler
     private boolean mUseJSURLHandler = false;
 
     public static final String ARG_URL = "arg_url";
@@ -94,6 +96,7 @@ public class MainJavaActivity extends AppCompatActivity {
     private void setupWebview() {
         binding.webView.getSettings().setJavaScriptEnabled(true);
         binding.webView.getSettings().setDomStorageEnabled(true);
+        binding.webView.getSettings().setSupportMultipleWindows(true);
 
         binding.webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -107,14 +110,11 @@ public class MainJavaActivity extends AppCompatActivity {
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                if (mUseJSURLHandler) {
-                    return super.shouldOverrideUrlLoading(view, request);
-                } else {
-                    if (request != null) {
-                        processUrl(request.getUrl().toString());
-                    }
+                // Here you handle the behavior for `target="_self"`
+                if (handelCustomScheme(request.getUrl().toString())) {
                     return true;
                 }
+                return super.shouldOverrideUrlLoading(view, request);
             }
         });
 
@@ -127,6 +127,25 @@ public class MainJavaActivity extends AppCompatActivity {
             @Override
             public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
                 return MainJavaActivity.this.onShowFileChooser(webView, filePathCallback, fileChooserParams);
+            }
+
+            @Override
+            public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
+                WebView newWebView = new WebView(MainJavaActivity.this);
+                WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
+                transport.setWebView(newWebView);
+                resultMsg.sendToTarget();
+
+                newWebView.setWebViewClient(new WebViewClient() {
+                    @Override
+                    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                        // Here you handle the behavior for `target="_blank"`
+                        processUrl(request.getUrl().toString());
+                        return true;
+                    }
+                });
+
+                return true;
             }
         });
 
@@ -148,6 +167,11 @@ public class MainJavaActivity extends AppCompatActivity {
      * Currently, we support one command with a JSON format like {"cmd":"openURL", "value":"https://zoom.us"}.
      * When this command type message is received, developers should start an activity with a browser to
      * load the URL within the value, such as "https://zoom.us".
+     *
+     * Please note the the command "openURL" of data format {"cmd":"openURL", "value":"https://zoom.us"} has been deprecated.
+     * It is recommended to use an <a> element with a target attribute,
+     * such as <a href="https://www.example.com" target="_blank">Open in New Tab</a>,
+     * to open the URL in a new tab.
      */
     private void injectJavaScriptFunction() {
 
@@ -214,7 +238,19 @@ public class MainJavaActivity extends AppCompatActivity {
         }
     }
 
+    // Custom scheme should be handled here
+    private boolean handelCustomScheme(String url) {
+        if (url.startsWith("tel:")) {
+            startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse(url)));
+            return true;
+        }
+        return false;
+    }
+
     private void processUrl(String url) {
+        if (handelCustomScheme(url)) {
+            return;
+        }
         //Customize your actions here to handle the URL as needed.
         if (mOpenURLInSystemBrowser) {
             // Case 1: open url in system browser

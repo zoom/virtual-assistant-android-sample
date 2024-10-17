@@ -30,18 +30,9 @@ class HomeActivity: AppCompatActivity() {
             startActivity(intent)
         }
         binding.btnCase4.setOnClickListener {
-            val intent = Intent(this, MainJavaActivity::class.java).apply {
-                putExtra(MainJavaActivity.ARG_URL, Constants.URL_CASE4)
-                putExtra(MainJavaActivity.ARG_OPEN_URL_IN_SYSTEM_BROWSER, true)
-                putExtra(MainJavaActivity.ARG_USE_JS_URL_HANDLER, true)
-            }
-            startActivity(intent)
-        }
-        binding.btnCase4New.setOnClickListener {
             val intent = Intent(this, MainKotlinActivity::class.java).apply {
                 putExtra(MainKotlinActivity.ARG_URL, Constants.URL_CASE4)
                 putExtra(MainKotlinActivity.ARG_OPEN_URL_IN_SYSTEM_BROWSER, true)
-                putExtra(MainKotlinActivity.ARG_USE_JS_URL_HANDLER, false)
             }
             startActivity(intent)
         }

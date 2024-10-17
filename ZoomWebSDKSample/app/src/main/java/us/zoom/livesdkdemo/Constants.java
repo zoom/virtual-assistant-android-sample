@@ -7,6 +7,11 @@ public class Constants {
     public static final String SUPPORT_HANDOFF_HANDLER_NAME = "handoffHandler";
     public static final String ZMCCWebKitMessageCmdKey = "cmd";
     public static final String ZMCCWebkitMessageValueKey = "value";
+    /** This command has been deprecated.
+     * It is recommended to use an <a> element with a target attribute,
+     * such as <a href="https://www.example.com" target="_blank">Open in New Tab</a>,
+     * to open the URL in a new tab.*/
+    @Deprecated
     public static final String ZMCCWebkitMessageCmdType_OpenURL = "openURL";
     public static final String ZMCCWebkitMessageCmdType_OpenURLInSystemBrowser = "openURLInSystemBrowser";
     public static final String URL_CASE1 = "https://us01ccistatic.zoom.us/us01cci/web-sdk/full-page.html?env=us01&apikey=2s-_NB4IRTe1RWqaDMX5YA&fullScreenId=lWU6-1rZS46r8vopyOERLA";
